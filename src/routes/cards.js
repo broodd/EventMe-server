@@ -403,7 +403,7 @@ router.put('/card/comment/:id', (req, res) => {
 })
 
 // update 
-router.put('/card/:id', (req, res) => {
+router.put('/card/update/:id', (req, res) => {
   Card.findById(req.params.id, (err, card) => {
     if (err) {
       console.log(err)
@@ -426,6 +426,7 @@ router.put('/card/:id', (req, res) => {
       if (req.body.img) {
         card.img = req.body.img
       }
+      console.log(card.img);
       card.save(err => {
         if (err) {
           res.sendStatus(500)

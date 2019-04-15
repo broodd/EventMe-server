@@ -16,6 +16,8 @@ const CardSchema = new Schema({
   },
   time: {
     type: Number
+    // type: Date, 
+    // default: Date.now
   },
   people: {
     type: Number
