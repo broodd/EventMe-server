@@ -48,7 +48,7 @@ const ObjectId = mongoose.Types.ObjectId;
 // send cards
 router.put('/cards', (req, res) => {
   var user_id = req.body.user_id,
-      user_ps = req.body.position;
+      user_ps = req.body.position || [0, 0];
   Card.aggregate([
     {
       "$geoNear": {
