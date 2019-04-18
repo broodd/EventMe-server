@@ -90,7 +90,8 @@ router.put('/cards', (req, res) => {
           $in: [ ObjectId(user_id), "$visitArr" ]
         },
 
-        "distance": "$distance"
+        "distance": "$distance",
+        "create": "$create"
       }
     },
     {
@@ -114,8 +115,8 @@ router.put('/cards', (req, res) => {
     },
     {
       $sort: {
-        distance: -1,
-        create: -1
+        // distance: -1,
+        create:  -1
       }
     },
     {
@@ -545,7 +546,7 @@ router.put('/card/like_visit/:id', (req, res) => {
 router.delete('/card/:id', (req, res) => {
   User.updateOne(
     { _id: req.body.user_id },
-    { '$pukk': { 'cards': card._id } },
+    { '$pull': { 'cards': req.params._id } },
     (err, data) => {
       if (err) {
         res.sendStatus(500)
