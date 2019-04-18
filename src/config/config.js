@@ -4,7 +4,7 @@ module.exports = {
   dbURL: 'mongodb+srv://broodd:Tooptoop22@eventtime-hqv67.gcp.mongodb.net/eventtime?retryWrites=true',
   dbOptions: { 
     useNewUrlParser: true,
-    useMongoClient: true 
+    // useMongoClient: true 
   }
 }
 
