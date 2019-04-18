@@ -26,7 +26,8 @@ const CardSchema = new Schema({
     type: Number
   },
   create: {
-    type: Number
+    type: Date, 
+    default: Date.now
   },
   img: {
     type: [String],
@@ -40,7 +41,8 @@ const CardSchema = new Schema({
     },
     coordinates: {
       type: [Number],
-      required: true
+      required: true,
+      default: [0, 0]
     }
   },
   likeArr: [{
@@ -61,24 +63,23 @@ const CardSchema = new Schema({
       default: undefined
     },
     text: String,
-    // create: Number,
     create: {
       type: Date, 
       default: Date.now
     },
-    reply: [{
-      _id: Schema.Types.ObjectId,
-      user: {
-        type: Schema.Types.ObjectId,
-        ref: 'user',
-        default: undefined
-      },
-      text: String,
-      create: {
-        type: Date, 
-        default: Date.now
-      },
-    }]
+    // reply: [{
+    //   _id: Schema.Types.ObjectId,
+    //   user: {
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'user',
+    //     default: undefined
+    //   },
+    //   text: String,
+    //   create: {
+    //     type: Date, 
+    //     default: Date.now
+    //   },
+    // }]
   }]
 })
 

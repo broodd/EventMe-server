@@ -225,7 +225,7 @@ router.post('/user', (req, res) => {
   const user = new User({
     fbid: req.body.fbid,
     login: req.body.login,
-    name: req.body.name,
+    // name: req.body.name,
     img: req.body.img,
     bio: req.body.bio,
     cards: [],

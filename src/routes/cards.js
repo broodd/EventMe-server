@@ -48,7 +48,9 @@ const ObjectId = mongoose.Types.ObjectId;
 // send cards
 router.put('/cards', (req, res) => {
   var user_id = req.body.user_id,
-      user_ps = req.body.position || [0, 0];
+      user_ps = req.body.position || [0, 0],
+      pn    = req.body.pn || 0;
+      // limit   = req.body.limit || 10;
   Card.aggregate([
     {
       "$geoNear": {
@@ -110,6 +112,18 @@ router.put('/cards', (req, res) => {
     {
       $unwind: '$user'
     },
+    {
+      $sort: {
+        distance: -1,
+        create: -1
+      }
+    },
+    {
+      $skip: pn * 5
+    },
+    {
+      $limit: 5
+    }
   ])
   .exec((err, cards) => {
     if (err) {
@@ -135,6 +149,17 @@ router.put('/cards', (req, res) => {
   //   }
   // })
 })
+
+// router.get('/cards', (req, res) => {
+//   Card.find({})
+//   .exec((err, cards) => {
+//     if (err) {
+//       res.sendStatus(500)
+//     } else {
+//       res.send({ cards: cards })
+//     }
+//   })
+// })
 
 router.get('/cards/geo', (req, res) => {
   Card.aggregate([
@@ -302,9 +327,9 @@ router.put('/card/comments/:id', (req, res) => {
   // })
 
   Card.aggregate([
-    // {
-    //   $match: { _id: ObjectId(req.params.id) }
-    // },
+    {
+      $match: { _id: ObjectId(req.params.id) }
+    },
     {
       $lookup: {
         from: 'users',
@@ -357,7 +382,6 @@ router.post('/card', (req, res) => {
     time: req.body.time,
     people: req.body.people,
     comments: req.body.comments,
-    create: req.body.create,
     img: req.body.img,
   })
   User.updateOne(
@@ -396,7 +420,7 @@ router.put('/card/comment/:id', (req, res) => {
       if (err) {
         res.sendStatus(500)
       } else {
-        res.send({ id: comm._id })
+        res.send({ id: data._id })
       }
     }
   )
@@ -426,9 +450,9 @@ router.put('/card/update/:id', (req, res) => {
       if (req.body.img) {
         card.img = req.body.img
       }
-      console.log(card.img);
       card.save(err => {
         if (err) {
+          console.log(err);
           res.sendStatus(500)
         } else {
           res.sendStatus(200)
