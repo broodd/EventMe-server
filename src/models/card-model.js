@@ -23,7 +23,8 @@ const CardSchema = new Schema({
     type: Number
   },
   comments: {
-    type: Number
+    type: Number,
+    default: 0
   },
   create: {
     type: Date, 
@@ -42,7 +43,7 @@ const CardSchema = new Schema({
     coordinates: {
       type: [Number],
       required: true,
-      default: [0, 0]
+      default: [45.5, -73.5]
     }
   },
   likeArr: [{

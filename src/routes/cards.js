@@ -8,48 +8,17 @@ const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId;
 
 
-// function pagination (page_size, page_num) {
-//   skips = page_size * (page_num - 1)
-//   cursor = db['students'].find().skip(skips).limit(page_size)
-// }
-
-// var u1 = new User({
-//   login: 'broodd',
-//   name: 'Svyat',
-//   img: 'Some img'
-// });
-
-// u1.save(function (err){
-//  if(err) return console.error(err.stack)
-//    console.log("User is added")
-// });
-
-
-// const c1 = new Card({
-//   title: 'It work',
-//   desc: 'some text',
-//   user: "5ca7414fec99542644721a46",
-//   time: 9,
-//   like: 9,
-//   visit: 9,
-//   people: 9,
-//   comments: 9,
-//   create: -1232323,
-//   img: []
-// })
-
-// c1.save(function (err){
-//  if(err) return console.error(err.stack)
-//    console.log("Card is added")
-// });
 
 
 // read all
 // send cards
-router.put('/cards', (req, res) => {
-  var user_id = req.body.user_id,
-      user_ps = req.body.position || [0, 0],
-      pn    = req.body.pn || 0;
+router.get('/cards', (req, res) => {
+  var user_id = req.query.user_id,
+      user_ps = req.query.position || [0, 0],
+      pn    = req.query.pn || 0;
+
+  user_ps[0] = +user_ps[0]
+  user_ps[1] = +user_ps[1]
       // limit   = req.body.limit || 10;
   Card.aggregate([
     {
@@ -69,8 +38,6 @@ router.put('/cards', (req, res) => {
         "desc": 1,
         "img": 1,
         "people": 1,
-        // "like": 1,
-        // "visit": 1,
         "time": 1,
         "comments": 1,
 
@@ -115,7 +82,7 @@ router.put('/cards', (req, res) => {
     },
     {
       $sort: {
-        // distance: -1,
+        distance: -1,
         create:  -1
       }
     },
@@ -162,31 +129,9 @@ router.put('/cards', (req, res) => {
 //   })
 // })
 
-router.get('/cards/geo', (req, res) => {
-  Card.aggregate([
-    { "$geoNear": {
-      "near": {
-        "type": "Point",
-        "coordinates": [-73.98, 40.77]
-      },
-      "distanceField": "distance",
-      "spherical": true,
-      "maxDistance": 10000
-    }}
-  ])
-  .exec((err, cards) => {
-    if (err) {
-      console.log(err);
-      res.sendStatus(500)
-    } else {
-      res.send({ cards: cards })
-    }
-  })
-})
-
 // read one by id
 // send card
-router.put('/card/:id', (req, res) => {
+router.get('/card/:id', (req, res) => {
   // Card.findOne({ _id: req.params.id }, { likeArr: 0, visitArr: 0 })
   // .populate({path: 'user', select: 'login name img'})
   // .exec((err, card) => {
@@ -197,11 +142,11 @@ router.put('/card/:id', (req, res) => {
   //   }
   // })
 
-  var user_id = req.body.user_id;
+  var user_id = req.query.user_id;
   Card.aggregate([
     {
       $match: { _id: ObjectId(req.params.id) }
-    },
+    }, 
     {
       $project: {
         "title": 1,
@@ -227,6 +172,7 @@ router.put('/card/:id', (req, res) => {
         "hasVisit" : {
           $in: [ ObjectId(user_id), "$visitArr" ]
         },
+        "location": "$location.coordinates"
       }
     },
     {
@@ -260,9 +206,9 @@ router.put('/card/:id', (req, res) => {
 
 // read members card
 // send card
-router.put('/card/members/:id', (req, res) => {
-  var pz = req.body.pz || 8;
-  var pn = req.body.pn || 0;
+router.get('/card/members/:id', (req, res) => {
+  var pz = +req.query.pz || 8;
+  var pn = +req.query.pn || 0;
   Card.aggregate([
     {
       $match: { _id: ObjectId(req.params.id) }
@@ -304,9 +250,9 @@ router.put('/card/members/:id', (req, res) => {
 
 // read comments card
 // send card
-router.put('/card/comments/:id', (req, res) => {
-  var pz = req.body.pz || 10;
-  var pn = req.body.pn || 0;
+router.get('/card/comments/:id', (req, res) => {
+  var pz = +req.query.pz || 10;
+  var pn = +req.query.pn || 0;
   // Card.findById(req.params.id, 
   //   {
   //     _id: 1,
@@ -382,8 +328,7 @@ router.post('/card', (req, res) => {
     user: req.body.user,
     time: req.body.time,
     people: req.body.people,
-    comments: req.body.comments,
-    img: req.body.img,
+    "location.coordinates" : req.body.location
   })
   User.updateOne(
     { _id: req.body.user },
@@ -450,6 +395,9 @@ router.put('/card/update/:id', (req, res) => {
       }
       if (req.body.img) {
         card.img = req.body.img
+      }
+      if (req.body.location) {
+        card.location.coordinates = req.body.location
       }
       card.save(err => {
         if (err) {

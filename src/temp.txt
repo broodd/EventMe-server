@@ -1,1 +1,38 @@
 page_num * page_size, page_size
+
+
+
+// function pagination (page_size, page_num) {
+//   skips = page_size * (page_num - 1)
+//   cursor = db['students'].find().skip(skips).limit(page_size)
+// }
+
+// var u1 = new User({
+//   login: 'broodd',
+//   name: 'Svyat',
+//   img: 'Some img'
+// });
+
+// u1.save(function (err){
+//  if(err) return console.error(err.stack)
+//    console.log("User is added")
+// });
+
+
+// const c1 = new Card({
+//   title: 'It work',
+//   desc: 'some text',
+//   user: "5ca7414fec99542644721a46",
+//   time: 9,
+//   like: 9,
+//   visit: 9,
+//   people: 9,
+//   comments: 9,
+//   create: -1232323,
+//   img: []
+// })
+
+// c1.save(function (err){
+//  if(err) return console.error(err.stack)
+//    console.log("Card is added")
+// });

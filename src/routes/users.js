@@ -108,6 +108,7 @@ router.put('/user/cards/:id', (req, res) => {
         "people": "$cards.people",
         "time": "$cards.time",
         "comments": "$cards.comments",
+        "create": "$cards.create",
 
         "user": {
           "_id": { "$arrayElemAt": [ "$cards.user._id", 0 ] },
@@ -129,6 +130,9 @@ router.put('/user/cards/:id', (req, res) => {
           $in: [ ObjectId(user_id), "$cards.visitArr" ]
         },
       }
+    },
+    {
+      $sort: { create: -1 }
     }
   ])
   .exec((err, cards) => {

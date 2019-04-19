@@ -10,8 +10,11 @@ mongoose.Promise = global.Promise
 const app = express()
 
 app.use(morgan('combined'));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}))
 app.use(bodyParser.json());
+// app.use(bodyParser);
 app.use(cors());
 
 app.use(require('./routes/cards'))
