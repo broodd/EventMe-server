@@ -7,23 +7,10 @@ const User = require('../models/user-model')
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId;
 
-// var u1 = new User({
-//   fbid: "yTecEoEXjtV41av7HkZInRuCVk92",
-//   login: 'some',
-//   name: 'Svyat',
-//   img: 'Some img',
-//   bio: '',
-//   cards: [],
-//   visit: []
-// });
-
-// u1.save(function (err){
-//  if(err) return console.error(err.stack)
-//    console.log("User is added")
-// });
+var pzDef = 5;
 
 
-// read one by fbid [It some secret, call only when login and reg user]
+// findByFbId [It some secret, call only when login and reg user]
 // send user witout refs {cards, visit}
 router.get('/user/fb/:id', (req, res) => {
   User.findOne({ fbid: req.params.id }, {fbid: 1, login: 1, name: 1, img: 1, bio: 1})
@@ -37,10 +24,10 @@ router.get('/user/fb/:id', (req, res) => {
   })
 })
 
-// read one by id [It some open and public key]
+// findById
 // send user witout refs {cards, visit}
 router.get('/user/:id', (req, res) => {
-  User.findOne({ _id: req.params.id }, {login: 1, name: 1, img: 1, bio: 1})
+  User.findOne({ _id: req.params.id }, {login: 1, name: 1, img: 1, bio: 1, cards: 1})
   // .populate('cards', 'visit')
   .exec((err, user) => {
     if (err) {
@@ -51,7 +38,7 @@ router.get('/user/:id', (req, res) => {
   })
 })
 
-// read one by login
+// findByLoginMin
 // send user {fbid, login} 
 router.get('/user/min/login/:login', (req, res) => {
   User.findOne({ login: req.params.login }, {fbid: 1, login: 1})
@@ -64,23 +51,114 @@ router.get('/user/min/login/:login', (req, res) => {
   })
 })
 
+// userCards
+router.get('/user/cards/beta/:id', (req, res) => {
+  var user_id = req.params.id,
+      user_ps = req.query.position || [0, 0],
+      pn    = req.query.pn || 0;
+
+  user_ps[0] = +user_ps[0]
+  user_ps[1] = +user_ps[1]
+      // limit   = req.body.limit || 10;
+  Card.aggregate([
+    {
+      "$geoNear": {
+        "near": {
+          "type": "Point",
+          "coordinates": user_ps
+        },
+        "distanceField": "distance",
+        "spherical": true,
+        // "maxDistance": 100000
+      },
+    },
+    {
+      $match: { user: ObjectId(req.params.id) }
+    },
+    {
+      $project: {
+        "title": 1,
+        "desc": 1,
+        "img": 1,
+        "people": 1,
+        "time": 1,
+        "comments": 1,
+
+        "user": "$user",
+        temp: user_id,
+
+        "like": {
+          $size: "$likeArr"
+        },
+        "hasLike" : {
+          $in: [ ObjectId(user_id), "$likeArr" ]
+        },
+        "visit": {
+          $size: "$visitArr"
+        },
+        "hasVisit" : {
+          $in: [ ObjectId(user_id), "$visitArr" ]
+        },
+
+        "distance": "$distance",
+        "create": "$create"
+      }
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user'
+      }
+    },
+    {
+      $project: {
+        "user.fbid": 0,
+        "user.cards": 0,
+        "user.visit": 0,
+        "user.bio": 0,
+      }
+    },
+    {
+      $unwind: '$user'
+    },
+    {
+      $sort: {
+        distance: 1,
+        create:  -1
+      }
+    },
+    {
+      $skip: pn * pzDef
+    },
+    {
+      $limit: pzDef
+    }
+  ])
+  .exec((err, cards) => {
+    if (err) {
+      console.log(err)
+      res.sendStatus(500)
+    } else {
+      res.send({ cards: cards })
+    }
+  })
+})
+
 // read cards by id
 // send user {fbid, login} 
-router.put('/user/cards/:id', (req, res) => {
-  // User.find({ _id: req.params.id }, {cards: 1})
-  // .populate({ path: 'cards', options: { sort: {'_id': -1 } } })
-  // .exec((err, cards) => {
-  //   if (err) {
-  //     res.sendStatus(500)
-  //   } else {
-  //     res.send({ cards: cards })
-  //   }
-  // })
+router.get('/user/cards/:id', (req, res) => {
+  var user_id = req.params.id,
+      user_ps = req.query.position || [0, 0],
+      pn    = req.query.pn || 0;
 
-  var user_id = req.body.user_id;
+  user_ps[0] = +user_ps[0]
+  user_ps[1] = +user_ps[1]
+      // limit   = req.body.limit || 10;
   User.aggregate([
     {
-      $match: { _id: ObjectId(req.params.id) }
+      $match: { _id: ObjectId(user_id) }
     },
     {
       $lookup: {
@@ -129,10 +207,116 @@ router.put('/user/cards/:id', (req, res) => {
         "hasVisit" : {
           $in: [ ObjectId(user_id), "$cards.visitArr" ]
         },
+
+        "disance": "$distance"
       }
     },
     {
       $sort: { create: -1 }
+    },
+    {
+      $skip: pn * pzDef
+    },
+    {
+      $limit: pzDef
+    }
+  ])
+  .exec((err, cards) => {
+    if (err) {
+      console.log(err)
+      res.sendStatus(500)
+    } else {
+      res.send({ cards: cards })
+    }
+  })
+})
+
+
+// read cards by id
+// send user {fbid, login} 
+router.get('/user/visit/beta/:id', (req, res) => {
+  var user_id = req.params.id,
+      user_ps = req.query.position || [0, 0],
+      pn    = req.query.pn || 0;
+
+  user_ps[0] = +user_ps[0]
+  user_ps[1] = +user_ps[1]
+      // limit   = req.body.limit || 10;
+  Card.aggregate([
+    {
+      "$geoNear": {
+        "near": {
+          "type": "Point",
+          "coordinates": user_ps
+        },
+        "distanceField": "distance",
+        "spherical": true,
+        // "maxDistance": 100000
+      },
+    },
+    {
+      $match: { 
+        "$in": [ ObjectId(user_id), "$visitArr" ]
+      }
+    },
+    {
+      $project: {
+        "title": 1,
+        "desc": 1,
+        "img": 1,
+        "people": 1,
+        "time": 1,
+        "comments": 1,
+
+        "user": "$user",
+
+        "like": {
+          $size: "$likeArr"
+        },
+        "hasLike" : {
+          $in: [ ObjectId(user_id), "$likeArr" ]
+        },
+        "visit": {
+          $size: "$visitArr"
+        },
+        "hasVisit" : {
+          $in: [ ObjectId(user_id), "$visitArr" ]
+        },
+
+        "distance": "$distance",
+        "create": "$create"
+      }
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'user',
+        foreignField: '_id',
+        as: 'user'
+      }
+    },
+    {
+      $project: {
+        "user.fbid": 0,
+        "user.cards": 0,
+        "user.visit": 0,
+        "user.bio": 0,
+      }
+    },
+    {
+      $unwind: '$user'
+    },
+    {
+      $sort: {
+        distance: 1,
+        create:  -1
+      }
+    },
+    {
+      $skip: pn * pzDef
+    },
+    {
+      $limit: pzDef
     }
   ])
   .exec((err, cards) => {
@@ -147,18 +331,16 @@ router.put('/user/cards/:id', (req, res) => {
 
 // read cards by id
 // send user {fbid, login} 
-router.put('/user/visit/:id', (req, res) => {
-  // User.find({ _id: req.params.id }, {visit: 1})
-  // .populate({ path: 'visit', options: { sort: {'_id': -1 } } })
-  // .exec((err, cards) => {
-  //   if (err) {
-  //     res.sendStatus(500)
-  //   } else {
-  //     res.send({ cards: cards })
-  //   }
-  // })
+router.get('/user/visit/:id', (req, res) => {
+  var user_id = req.params.id,
+      user_ps = req.query.position || [0, 0],
+      pn    = req.query.pn || 0;
 
-  var user_id = req.body.user_id;
+  user_ps[0] = +user_ps[0]
+  user_ps[1] = +user_ps[1]
+
+  console.log(user_id);
+
   User.aggregate([
     {
       $match: { _id: ObjectId(req.params.id) }
@@ -201,16 +383,28 @@ router.put('/user/visit/:id', (req, res) => {
         "like": {
           $size: "$visit.likeArr"
         },
-        "hasLike" : {
+        "hasLike": {
           $in: [ ObjectId(user_id), "$visit.likeArr" ]
         },
         "visit": {
           $size: "$visit.visitArr"
         },
+        // "hasVisit": "true"
         "hasVisit" : {
           $in: [ ObjectId(user_id), "$visit.visitArr" ]
         },
+
+        "create": "$visit.create"
       }
+    },
+    {
+      $sort: { create:  -1 }
+    },
+    {
+      $skip: pn * pzDef
+    },
+    {
+      $limit: pzDef
     }
   ])
   .exec((err, cards) => {

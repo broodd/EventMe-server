@@ -8,10 +8,11 @@ const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId;
 
 
+var pzDef = 5;
 
 
-// read all
-// send cards
+
+// fetchCards
 router.get('/cards', (req, res) => {
   var user_id = req.query.user_id,
       user_ps = req.query.position || [0, 0],
@@ -19,7 +20,6 @@ router.get('/cards', (req, res) => {
 
   user_ps[0] = +user_ps[0]
   user_ps[1] = +user_ps[1]
-      // limit   = req.body.limit || 10;
   Card.aggregate([
     {
       "$geoNear": {
@@ -82,15 +82,15 @@ router.get('/cards', (req, res) => {
     },
     {
       $sort: {
-        distance: -1,
+        distance: 1,
         create:  -1
       }
     },
     {
-      $skip: pn * 5
+      $skip: pn * pzDef
     },
     {
-      $limit: 5
+      $limit: pzDef
     }
   ])
   .exec((err, cards) => {
@@ -101,49 +101,28 @@ router.get('/cards', (req, res) => {
       res.send({ cards: cards })
     }
   })
-
-
-  // var skip = req.params.skip || 0;
-  // Card.find({}, {likeArr: 0, visitArr: 0})
-  // .skip(skip)
-  // // .limit(1)
-  // .populate('user')
-  // .sort({ _id: -1 })
-  // .exec((err, cards) => {
-  //   if (err) {
-  //     res.sendStatus(500)
-  //   } else {
-  //     res.send({ cards: cards })
-  //   }
-  // })
 })
 
-// router.get('/cards', (req, res) => {
-//   Card.find({})
-//   .exec((err, cards) => {
-//     if (err) {
-//       res.sendStatus(500)
-//     } else {
-//       res.send({ cards: cards })
-//     }
-//   })
-// })
-
-// read one by id
-// send card
+// findById
 router.get('/card/:id', (req, res) => {
-  // Card.findOne({ _id: req.params.id }, { likeArr: 0, visitArr: 0 })
-  // .populate({path: 'user', select: 'login name img'})
-  // .exec((err, card) => {
-  //   if (err) {
-  //     res.sendStatus(500)
-  //   } else {
-  //     res.send({ card: card })
-  //   }
-  // })
+  var user_id = req.query.user_id,
+      user_ps = req.query.position || [0, 0];
 
-  var user_id = req.query.user_id;
+  user_ps[0] = +user_ps[0]
+  user_ps[1] = +user_ps[1]
+
   Card.aggregate([
+    {
+      "$geoNear": {
+        "near": {
+          "type": "Point",
+          "coordinates": user_ps
+        },
+        "distanceField": "distance",
+        "spherical": true,
+        // "maxDistance": 100000
+      },
+    },
     {
       $match: { _id: ObjectId(req.params.id) }
     }, 
@@ -204,7 +183,7 @@ router.get('/card/:id', (req, res) => {
   })
 })
 
-// read members card
+// fetchMembers
 // send card
 router.get('/card/members/:id', (req, res) => {
   var pz = +req.query.pz || 8;
@@ -248,7 +227,7 @@ router.get('/card/members/:id', (req, res) => {
 })
 
 
-// read comments card
+// fetchComments
 // send card
 router.get('/card/comments/:id', (req, res) => {
   var pz = +req.query.pz || 10;
@@ -319,7 +298,7 @@ router.get('/card/comments/:id', (req, res) => {
   })
 })
 
-// create card
+// addNewCard
 // send id
 router.post('/card', (req, res) => {
   const card = new Card({
@@ -348,7 +327,7 @@ router.post('/card', (req, res) => {
   })
 })
 
-// push comment
+// addComment
 router.put('/card/comment/:id', (req, res) => {
   const comm = {
     _id: new ObjectId(),
@@ -372,7 +351,7 @@ router.put('/card/comment/:id', (req, res) => {
   )
 })
 
-// update 
+// updateCard
 router.put('/card/update/:id', (req, res) => {
   Card.findById(req.params.id, (err, card) => {
     if (err) {
@@ -411,7 +390,7 @@ router.put('/card/update/:id', (req, res) => {
   })
 })
 
-// update like/visit
+// updateLikeVisitCard
 // TODO maybe make this more pretty
 router.put('/card/like_visit/:id', (req, res) => {
   if ( req.body.type === true ) {
@@ -490,7 +469,7 @@ router.put('/card/like_visit/:id', (req, res) => {
   }
 })
 
-// delet by id
+// deleteCard
 router.delete('/card/:id', (req, res) => {
   User.updateOne(
     { _id: req.body.user_id },

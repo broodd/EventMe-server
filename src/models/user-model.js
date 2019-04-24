@@ -5,9 +5,9 @@ const Schema = mongoose.Schema
 const UserSchema = new Schema({
   fbid: {
     type: String,
-    unique: true,
+    // unique: true,
     // index: true,
-    default: undefined
+    default: null
   },
   login: {
     type: String,
