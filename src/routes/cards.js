@@ -8,24 +8,30 @@ const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId;
 
 
-var pzDef = 5;
+// default variables
+var __pageSize    = 5,
+    __position    = [0, 0],
+    __membersSize = 8,
+    __commentsSize = 10;
 
 
 
 // fetchCards
 router.get('/cards', (req, res) => {
-  var user_id = req.query.user_id,
-      user_ps = req.query.position || [0, 0],
-      pn    = req.query.pn || 0;
+  var userId = req.query.userId,
+      position = req.query.position || __position,
+      pageNum    = req.query.pageNum || 0;
 
-  user_ps[0] = +user_ps[0]
-  user_ps[1] = +user_ps[1]
+  console.log(pageNum, req.body.pageNum);
+
+  position[0] = +position[0]
+  position[1] = +position[1]
   Card.aggregate([
     {
       "$geoNear": {
         "near": {
           "type": "Point",
-          "coordinates": user_ps
+          "coordinates": position
         },
         "distanceField": "distance",
         "spherical": true,
@@ -42,19 +48,18 @@ router.get('/cards', (req, res) => {
         "comments": 1,
 
         "user": "$user",
-        temp: user_id,
 
         "like": {
           $size: "$likeArr"
         },
         "hasLike" : {
-          $in: [ ObjectId(user_id), "$likeArr" ]
+          $in: [ ObjectId(userId), "$likeArr" ]
         },
         "visit": {
           $size: "$visitArr"
         },
         "hasVisit" : {
-          $in: [ ObjectId(user_id), "$visitArr" ]
+          $in: [ ObjectId(userId), "$visitArr" ]
         },
 
         "distance": "$distance",
@@ -83,14 +88,15 @@ router.get('/cards', (req, res) => {
     {
       $sort: {
         distance: 1,
-        create:  -1
+        create:  -1,
+        // time: 1
       }
     },
     {
-      $skip: pn * pzDef
+      $skip: pageNum * __pageSize
     },
     {
-      $limit: pzDef
+      $limit: __pageSize
     }
   ])
   .exec((err, cards) => {
@@ -105,18 +111,18 @@ router.get('/cards', (req, res) => {
 
 // findById
 router.get('/card/:id', (req, res) => {
-  var user_id = req.query.user_id,
-      user_ps = req.query.position || [0, 0];
+  var userId = req.query.userId,
+      position = req.query.position || __position;
 
-  user_ps[0] = +user_ps[0]
-  user_ps[1] = +user_ps[1]
+  position[0] = +position[0]
+  position[1] = +position[1]
 
   Card.aggregate([
     {
       "$geoNear": {
         "near": {
           "type": "Point",
-          "coordinates": user_ps
+          "coordinates": position
         },
         "distanceField": "distance",
         "spherical": true,
@@ -143,13 +149,13 @@ router.get('/card/:id', (req, res) => {
           $size: "$likeArr"
         },
         "hasLike" : {
-          $in: [ ObjectId(user_id), "$likeArr" ]
+          $in: [ ObjectId(userId), "$likeArr" ]
         },
         "visit": {
           $size: "$visitArr"
         },
         "hasVisit" : {
-          $in: [ ObjectId(user_id), "$visitArr" ]
+          $in: [ ObjectId(userId), "$visitArr" ]
         },
         "location": "$location.coordinates"
       }
@@ -186,7 +192,7 @@ router.get('/card/:id', (req, res) => {
 // fetchMembers
 // send card
 router.get('/card/members/:id', (req, res) => {
-  var pz = +req.query.pz || 8;
+  var pz = +req.query.pz || __membersSize;
   var pn = +req.query.pn || 0;
   Card.aggregate([
     {
@@ -230,7 +236,7 @@ router.get('/card/members/:id', (req, res) => {
 // fetchComments
 // send card
 router.get('/card/comments/:id', (req, res) => {
-  var pz = +req.query.pz || 10;
+  var pz = +req.query.pz || __commentsSize;
   var pn = +req.query.pn || 0;
   // Card.findById(req.params.id, 
   //   {

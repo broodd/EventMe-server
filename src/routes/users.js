@@ -7,8 +7,11 @@ const User = require('../models/user-model')
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId;
 
-var pzDef = 5;
-
+// default variables
+var __pageSize    = 5,
+    __position    = [0, 0],
+    __membersSize = 8,
+    __commentsSize = 10;
 
 // findByFbId [It some secret, call only when login and reg user]
 // send user witout refs {cards, visit}
@@ -53,19 +56,19 @@ router.get('/user/min/login/:login', (req, res) => {
 
 // userCards
 router.get('/user/cards/beta/:id', (req, res) => {
-  var user_id = req.params.id,
-      user_ps = req.query.position || [0, 0],
-      pn    = req.query.pn || 0;
+  var userId = req.params.id,
+      position = req.query.position || __position
+      pageNum    = req.query.pageNum || 0;
 
-  user_ps[0] = +user_ps[0]
-  user_ps[1] = +user_ps[1]
+  position[0] = +position[0]
+  position[1] = +position[1]
       // limit   = req.body.limit || 10;
   Card.aggregate([
     {
       "$geoNear": {
         "near": {
           "type": "Point",
-          "coordinates": user_ps
+          "coordinates": position
         },
         "distanceField": "distance",
         "spherical": true,
@@ -85,19 +88,19 @@ router.get('/user/cards/beta/:id', (req, res) => {
         "comments": 1,
 
         "user": "$user",
-        temp: user_id,
+        temp: userId,
 
         "like": {
           $size: "$likeArr"
         },
         "hasLike" : {
-          $in: [ ObjectId(user_id), "$likeArr" ]
+          $in: [ ObjectId(userId), "$likeArr" ]
         },
         "visit": {
           $size: "$visitArr"
         },
         "hasVisit" : {
-          $in: [ ObjectId(user_id), "$visitArr" ]
+          $in: [ ObjectId(userId), "$visitArr" ]
         },
 
         "distance": "$distance",
@@ -130,10 +133,10 @@ router.get('/user/cards/beta/:id', (req, res) => {
       }
     },
     {
-      $skip: pn * pzDef
+      $skip: pageNum * __pageSize
     },
     {
-      $limit: pzDef
+      $limit: __pageSize
     }
   ])
   .exec((err, cards) => {
@@ -235,19 +238,19 @@ router.get('/user/cards/:id', (req, res) => {
 // read cards by id
 // send user {fbid, login} 
 router.get('/user/visit/beta/:id', (req, res) => {
-  var user_id = req.params.id,
-      user_ps = req.query.position || [0, 0],
-      pn    = req.query.pn || 0;
+  var userId = req.params.id,
+      position = req.query.position || __position,
+      pageNum    = req.query.pageNum || 0;
 
-  user_ps[0] = +user_ps[0]
-  user_ps[1] = +user_ps[1]
+  position[0] = +position[0]
+  position[1] = +position[1]
       // limit   = req.body.limit || 10;
   Card.aggregate([
     {
       "$geoNear": {
         "near": {
           "type": "Point",
-          "coordinates": user_ps
+          "coordinates": position
         },
         "distanceField": "distance",
         "spherical": true,
@@ -256,7 +259,7 @@ router.get('/user/visit/beta/:id', (req, res) => {
     },
     {
       $match: { 
-        "$in": [ ObjectId(user_id), "$visitArr" ]
+        "$in": [ ObjectId(userId), "$visitArr" ]
       }
     },
     {
@@ -274,13 +277,13 @@ router.get('/user/visit/beta/:id', (req, res) => {
           $size: "$likeArr"
         },
         "hasLike" : {
-          $in: [ ObjectId(user_id), "$likeArr" ]
+          $in: [ ObjectId(userId), "$likeArr" ]
         },
         "visit": {
           $size: "$visitArr"
         },
         "hasVisit" : {
-          $in: [ ObjectId(user_id), "$visitArr" ]
+          $in: [ ObjectId(userId), "$visitArr" ]
         },
 
         "distance": "$distance",
@@ -313,10 +316,10 @@ router.get('/user/visit/beta/:id', (req, res) => {
       }
     },
     {
-      $skip: pn * pzDef
+      $skip: pageNum * __pageSize
     },
     {
-      $limit: pzDef
+      $limit: __pageSize
     }
   ])
   .exec((err, cards) => {
@@ -332,14 +335,14 @@ router.get('/user/visit/beta/:id', (req, res) => {
 // read cards by id
 // send user {fbid, login} 
 router.get('/user/visit/:id', (req, res) => {
-  var user_id = req.params.id,
-      user_ps = req.query.position || [0, 0],
-      pn    = req.query.pn || 0;
+  var userId = req.params.id,
+      position = req.query.position || __position,
+      pageNum    = req.query.pageNum || 0;
 
-  user_ps[0] = +user_ps[0]
-  user_ps[1] = +user_ps[1]
+  position[0] = +position[0]
+  position[1] = +position[1]
 
-  console.log(user_id);
+  console.log(userId);
 
   User.aggregate([
     {
@@ -384,27 +387,27 @@ router.get('/user/visit/:id', (req, res) => {
           $size: "$visit.likeArr"
         },
         "hasLike": {
-          $in: [ ObjectId(user_id), "$visit.likeArr" ]
+          $in: [ ObjectId(userId), "$visit.likeArr" ]
         },
         "visit": {
           $size: "$visit.visitArr"
         },
         // "hasVisit": "true"
         "hasVisit" : {
-          $in: [ ObjectId(user_id), "$visit.visitArr" ]
+          $in: [ ObjectId(userId), "$visit.visitArr" ]
         },
 
         "create": "$visit.create"
       }
     },
     {
-      $sort: { create:  -1 }
+      $sort: { time: 1 }
     },
     {
-      $skip: pn * pzDef
+      $skip: pageNum * __pageSize
     },
     {
-      $limit: pzDef
+      $limit: __pageSize
     }
   ])
   .exec((err, cards) => {
