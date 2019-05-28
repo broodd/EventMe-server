@@ -10,11 +10,12 @@ mongoose.Promise = global.Promise
 const app = express()
 
 app.use(morgan('combined'));
-app.use(bodyParser.urlencoded({
-  extended: true
-}))
 app.use(bodyParser.json());
-// app.use(bodyParser);
+app.use(
+  bodyParser.urlencoded({
+    extended: true
+  })
+);
 app.use(cors());
 
 app.use(require('./routes/cards'))
@@ -29,14 +30,3 @@ mongoose.connection
       () => console.log(`Server start on port ${config.port} ...`))
   })
   .on('error', error => console.warn(error))
-
-
-
-// app.get('/posts', (req, res) => {
-//   res.send(
-//     [{
-//       title: "Hello World!",
-//       description: "Hi there! How are you?"
-//     }]
-//   )
-// })

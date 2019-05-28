@@ -42,3 +42,184 @@ page_num * page_size, page_size
 //  if(err) return console.error(err.stack)
 //    console.log("Card is added")
 // });
+
+
+
+
+
+
+
+// read cards by id
+// send user {fbid, login} 
+router.get('/user/cards', middleware, (req, res) => {
+  const pn    = req.query.pn || 0;
+
+  res.end()
+  return
+
+
+  User.aggregate([
+    {
+      $match: { _id: ObjectId(req.userId) }
+    },
+    {
+      $lookup: {
+        from: 'cards',
+        localField: 'cards',
+        foreignField: '_id',
+        as: 'cards'
+      }
+    },
+    { $unwind: '$cards' },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'cards.user',
+        foreignField: '_id',
+        as: 'cards.user'
+      }
+    },
+    {
+      $project: {
+        "_id": "$cards._id",
+        "title": "$cards.title",
+        "desc": "$cards.desc",
+        "img": "$cards.img",
+        "people": "$cards.people",
+        "time": "$cards.time",
+        "comments": "$cards.comments",
+        "create": "$cards.create",
+
+        "user": {
+          "_id": { "$arrayElemAt": [ "$cards.user._id", 0 ] },
+          "login": { "$arrayElemAt": [ "$cards.user.login", 0 ] },
+          "name": { "$arrayElemAt": [ "$cards.user.name", 0 ] },
+          "img": { "$arrayElemAt": [ "$cards.user.img", 0 ] },
+        },
+
+        "like": {
+          $size: "$cards.likeArr"
+        },
+        "hasLike" : {
+          $in: [ ObjectId(req.userId), "$cards.likeArr" ]
+        },
+        "visit": {
+          $size: "$cards.visitArr"
+        },
+        "hasVisit" : {
+          $in: [ ObjectId(req.userId), "$cards.visitArr" ]
+        },
+
+        "disance": "$distance"
+      }
+    },
+    {
+      $sort: { create: -1 }
+    },
+    {
+      $skip: pn * req.defVars.__pageSize
+    },
+    {
+      $limit: req.defVars.__pageSize
+    }
+  ])
+  .exec((err, cards) => {
+    if (err) {
+      console.log(err)
+      res.sendStatus(500)
+    } else {
+      res.send({ cards: cards })
+    }
+  })
+})
+
+
+
+
+// read cards by id
+// send user {fbid, login} 
+router.get('/user/visit/:id', (req, res) => {
+  var userId = req.params.id,
+      position = req.query.position || __position,
+      pageNum    = req.query.pageNum || 0;
+
+  position[0] = +position[0]
+  position[1] = +position[1]
+
+  console.log(userId);
+
+  User.aggregate([
+    {
+      $match: { _id: ObjectId(req.params.id) }
+    },
+    {
+      $lookup: {
+        from: 'cards',
+        localField: 'visit',
+        foreignField: '_id',
+        as: 'visit'
+      }
+    },
+    { $unwind: '$visit' },
+    // { $unwind: '$visit.user' },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'visit.user',
+        foreignField: '_id',
+        as: 'visit.user'
+      }
+    },
+    {
+      $project: {
+        "_id": "$visit._id",
+        "title": "$visit.title",
+        "desc": "$visit.desc",
+        "img": "$visit.img",
+        "people": "$visit.people",
+        "time": "$visit.time",
+        "comments": "$visit.comments",
+
+        "user": {
+          "_id": { "$arrayElemAt": [ "$visit.user._id", 0 ] },
+          "login": { "$arrayElemAt": [ "$visit.user.login", 0 ] },
+          "name": { "$arrayElemAt": [ "$visit.user.name", 0 ] },
+          "img": { "$arrayElemAt": [ "$visit.user.img", 0 ] },
+        },
+
+        "like": {
+          $size: "$visit.likeArr"
+        },
+        "hasLike": {
+          $in: [ ObjectId(userId), "$visit.likeArr" ]
+        },
+        "visit": {
+          $size: "$visit.visitArr"
+        },
+        // "hasVisit": "true"
+        "hasVisit" : {
+          $in: [ ObjectId(userId), "$visit.visitArr" ]
+        },
+
+        "create": "$visit.create"
+      }
+    },
+    {
+      $sort: { time: 1 }
+    },
+    {
+      $skip: pageNum * __pageSize
+    },
+    {
+      $limit: __pageSize
+    }
+  ])
+  .exec((err, cards) => {
+    if (err) {
+      console.log(err)
+      res.sendStatus(500)
+    } else {
+      res.send({ cards: cards })
+    }
+  })
+})
