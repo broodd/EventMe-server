@@ -11,8 +11,8 @@ module.exports = async (req, res) => {
             type: 'Point',
             coordinates: req.position
           },
-          distanceField: 'distance',
-          spherical: true
+          spherical: true,
+          distanceField: 'distance'
           // "maxDistance": 100000
         }
       },
@@ -42,6 +42,7 @@ module.exports = async (req, res) => {
           hasVisit: {
             $in: [ObjectId(req.userId), '$visitArr']
           },
+          distance: '$distance',
           location: '$location.coordinates'
         }
       },

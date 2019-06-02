@@ -9,13 +9,12 @@ module.exports = async (req, res) => {
     const cards = await Card.aggregate([
       {
         "$geoNear": {
-          "near": {
+          near: {
             "type": "Point",
             "coordinates": req.position
           },
-          "distanceField": "distance",
-          "spherical": true,
-          // "maxDistance": 100000
+          distanceField: "distance",
+          spherical: true
         },
       },
       {
@@ -74,8 +73,9 @@ module.exports = async (req, res) => {
       },
       {
         $sort: {
+          create: -1,
           distance: 1,
-          create:  -1
+          time: -1,
         }
       },
       {

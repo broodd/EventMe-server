@@ -3,5 +3,5 @@ module.exports = {
   __position: [0, 0],
   __membersSize: 8,
   __commentsSize: 10,
-  __max: 10000
+  __max: null
 };

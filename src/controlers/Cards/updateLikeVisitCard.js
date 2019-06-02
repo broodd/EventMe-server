@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
           { $pull: { visit: req.params.id } },
         );
           
-        res.sendStatus(200);
+        return res.sendStatus(200);
       }
       if (req.body.has === false) {
         await Card.updateOne(

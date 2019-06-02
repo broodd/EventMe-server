@@ -4,10 +4,11 @@ const Card = require('../../models/card-model');
 
 module.exports = async (req, res) => {
   try {
+    var regex = new RegExp(req.query.text, "ig");
     const pageNum = req.query.pageNum || 0;
+    const max     = (+req.query.max * 1000) || req.defVars.__max;
+    const min     = (+req.query.min * 1000) || 0;
 
-    // return res.json(req.query.max)
-    console.log(typeof +req.query.max)
     const cards = await Card.aggregate([
       {
         $geoNear: {
@@ -16,10 +17,25 @@ module.exports = async (req, res) => {
             coordinates: req.position
           },
           spherical: true,
-          distanceMultiplier: 1,
-          maxDistance: +req.query.max * 1000 || req.defVars.__max,
-          minDistance: +req.query.min * 1000 || 0,
-          distanceField: 'distance',
+          maxDistance: max,
+          minDistance: min,
+          distanceField: 'distance'
+        }
+      },
+      {
+        $match: {
+          $or: [
+            {
+              title: {
+                $regex: regex
+              }
+            },
+            {
+              desc: {
+                $regex: regex 
+              }
+            }
+          ]
         }
       },
       {
@@ -71,8 +87,9 @@ module.exports = async (req, res) => {
       },
       {
         $sort: {
+          create: -1,
           distance: 1,
-          create: -1
+          time: -1,
         }
       },
       {

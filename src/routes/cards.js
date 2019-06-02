@@ -4,7 +4,6 @@ const router = express.Router();
 const middleware = require('../controlers/middleware');
 const fetchCards = require('../controlers/Cards/fetchCards');
 const findById = require('../controlers/Cards/findById');
-const findByText = require('../controlers/Cards/findByText');
 const fetchMembers = require('../controlers/Cards/fetchMembers');
 const fetchComments = require('../controlers/Cards/fetchComments');
 const addNewCard = require('../controlers/Cards/addNewCard');
@@ -18,9 +17,6 @@ router.get('/cards', middleware, fetchCards);
 
 // findById
 router.get('/card', middleware, findById);
-
-// findById
-router.get('/card_find', middleware, findByText);
 
 // fetchMembers
 router.get('/card/members/:id', middleware, fetchMembers);
