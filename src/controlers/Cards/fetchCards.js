@@ -4,10 +4,26 @@ const Card = require('../../models/card-model');
 
 module.exports = async (req, res) => {
   try {
-    var regex = new RegExp(req.query.text, "ig");
-    const pageNum = req.query.pageNum || 0;
-    const max     = (+req.query.max * 1000) || req.defVars.__max;
-    const min     = (+req.query.min * 1000) || 0;
+    var filter = JSON.parse(req.query.filter)
+
+    var pageNum = +req.query.pageNum || 0;
+    var regex = new RegExp(filter.text || '', "ig");
+    var max = (+filter.max * 1000) || req.defVars.__max;
+    var min = (+filter.min * 1000) || 0;
+
+    console.log(req.userId, req.position)
+
+    var sort = {}
+    if (filter.orderDis)
+      sort.distance = filter.orderDis
+
+    if (filter.orderTime)
+      sort.time = filter.orderTime
+
+    if (filter.orderCreate)
+      sort.create = filter.orderCreate
+    else sort.create = -1
+
 
     const cards = await Card.aggregate([
       {
@@ -86,11 +102,7 @@ module.exports = async (req, res) => {
         $unwind: '$user'
       },
       {
-        $sort: {
-          create: -1,
-          distance: 1,
-          time: -1,
-        }
+        $sort: sort
       },
       {
         $skip: pageNum * req.defVars.__pageSize
@@ -102,6 +114,7 @@ module.exports = async (req, res) => {
 
     res.status(200).json({ cards });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: error.message

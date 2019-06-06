@@ -10,14 +10,11 @@ const CardSchema = new Schema({
     type: String
   },
   user: {
-    // type: String
     type: Schema.Types.ObjectId,
     ref: 'user'
   },
   time: {
     type: Number
-    // type: Date, 
-    // default: Date.now
   },
   people: {
     type: Number
@@ -67,20 +64,7 @@ const CardSchema = new Schema({
     create: {
       type: Date, 
       default: Date.now
-    },
-    // reply: [{
-    //   _id: Schema.Types.ObjectId,
-    //   user: {
-    //     type: Schema.Types.ObjectId,
-    //     ref: 'user',
-    //     default: undefined
-    //   },
-    //   text: String,
-    //   create: {
-    //     type: Date, 
-    //     default: Date.now
-    //   },
-    // }]
+    }
   }]
 })
 

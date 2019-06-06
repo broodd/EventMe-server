@@ -5,8 +5,6 @@ const Schema = mongoose.Schema
 const UserSchema = new Schema({
   fbid: {
     type: String,
-    // unique: true,
-    // index: true,
     default: null
   },
   login: {
@@ -14,10 +12,6 @@ const UserSchema = new Schema({
     unique: true,
     default: undefined
   },
-  // name: {
-  //   type: String,
-  //   default: undefined
-  // },
   img: {
     type: String,
     default: undefined

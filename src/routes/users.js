@@ -27,7 +27,7 @@ const deleteUser = require('../controlers/Users/deleteUser');
 
 // findByFbId [It some secret, call only when login and reg user]
 // send user witout refs {cards, visit}
-router.get('/user/fb/:id', middleware, findByFbId)
+router.get('/user/fb/:id', findByFbId)
 
 // findById
 // send user witout refs {cards, visit}
