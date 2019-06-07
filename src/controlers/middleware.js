@@ -8,7 +8,6 @@ module.exports = (req, res, next) => {
 
 
   var position = req.headers['position'].split(',') || defaultVars.__position;
-  console.log(position);
   position[0] = +position[0];
   position[1] = +position[1];
   req.position = position;

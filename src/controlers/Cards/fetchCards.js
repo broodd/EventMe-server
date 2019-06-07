@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     var max = (+filter.max * 1000) || req.defVars.__max;
     var min = (+filter.min * 1000) || 0;
 
-    console.log(req.userId, req.position)
+    console.log(req.userId, req.position, filter)
 
     var sort = {}
     if (filter.orderDis)
@@ -20,9 +20,7 @@ module.exports = async (req, res) => {
     if (filter.orderTime)
       sort.time = filter.orderTime
 
-    if (filter.orderCreate)
-      sort.create = filter.orderCreate
-    else sort.create = -1
+    sort.create = -1
 
 
     const cards = await Card.aggregate([
