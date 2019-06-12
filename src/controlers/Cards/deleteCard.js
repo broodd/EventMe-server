@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const Card = require('../../models/card-model');
+const User = require('../../models/card-model');
 
 module.exports = async (req, res) => {
   try {

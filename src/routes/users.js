@@ -7,13 +7,6 @@ const User = require('../models/user-model')
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId;
 
-// default variables
-var __pageSize    = 5,
-    __position    = [0, 0],
-    __membersSize = 8,
-    __commentsSize = 10;
-
-
 const middleware = require('../controlers/middleware');
 const findByFbId = require('../controlers/Users/findByFbId');
 const findById = require('../controlers/Users/findById');

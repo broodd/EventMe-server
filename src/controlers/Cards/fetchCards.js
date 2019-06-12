@@ -11,17 +11,18 @@ module.exports = async (req, res) => {
     var max = (+filter.max * 1000) || req.defVars.__max;
     var min = (+filter.min * 1000) || 0;
 
-    console.log(req.userId, req.position, filter)
 
     var sort = {}
-    if (filter.orderDis)
+    sort.create = -1
+    if (filter.orderTime !== undefined)
+      sort.time = filter.orderTime
+    
+    if (filter.orderDis !== undefined)
       sort.distance = filter.orderDis
 
-    if (filter.orderTime)
-      sort.time = filter.orderTime
 
-    sort.create = -1
 
+    console.log(req.userId, req.position, filter, max, min, regex, pageNum, sort)
 
     const cards = await Card.aggregate([
       {
